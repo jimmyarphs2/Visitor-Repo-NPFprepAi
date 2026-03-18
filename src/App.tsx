@@ -88,6 +88,11 @@ export default function App() {
     };
 
     window.addEventListener('scroll', handleScroll);
+    
+    // TikTok ViewContent
+    if (typeof (window as any).ttq !== 'undefined') {
+      (window as any).ttq.track('ViewContent');
+    }
 
     // Dynamic Counter
     const interval = setInterval(() => {
@@ -106,7 +111,8 @@ export default function App() {
       await logEvent('click', { button: 'start_preparing_now', target: 'https://npfprepai.online' });
       
       // TikTok Tracking
-      if ((window as any).ttq) {
+      if (typeof (window as any).ttq !== 'undefined') {
+        (window as any).ttq.track('ClickButton');
         (window as any).ttq.track('CompleteRegistration', {
           content_name: 'Start Free Practice',
           content_category: 'Button Click'
@@ -124,7 +130,7 @@ export default function App() {
     logEvent('whatsapp_join');
 
     // TikTok Tracking
-    if ((window as any).ttq) {
+    if (typeof (window as any).ttq !== 'undefined') {
       (window as any).ttq.track('Contact', {
         content_name: 'Join WhatsApp Community',
         content_category: 'Button Click'
@@ -154,7 +160,7 @@ export default function App() {
       }
 
       // TikTok Tracking
-      if ((window as any).ttq) {
+      if (typeof (window as any).ttq !== 'undefined') {
         (window as any).ttq.track('Share', {
           content_name: 'Testimonial Share',
           content_id: index.toString()
@@ -175,7 +181,7 @@ export default function App() {
     logEvent('click', { action: 'testimonial_share_whatsapp', index });
     
     // TikTok Tracking
-    if ((window as any).ttq) {
+    if (typeof (window as any).ttq !== 'undefined') {
       (window as any).ttq.track('Share', {
         content_name: 'WhatsApp Share',
         content_id: index.toString()
@@ -194,7 +200,7 @@ export default function App() {
     logEvent('click', { action: 'testimonial_share_facebook', index });
     
     // TikTok Tracking
-    if ((window as any).ttq) {
+    if (typeof (window as any).ttq !== 'undefined') {
       (window as any).ttq.track('Share', {
         content_name: 'Facebook Share',
         content_id: index.toString()
