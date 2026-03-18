@@ -17,7 +17,8 @@ import {
   Download,
   X,
   Share2,
-  Facebook
+  Facebook,
+  MessageCircle
 } from 'lucide-react';
 import { auth, signInWithGoogle, logEvent } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -161,6 +162,24 @@ export default function App() {
       }
     } catch (err) {
       console.error('Error sharing:', err);
+    }
+  };
+
+  const handleWhatsAppShare = (index: number) => {
+    const testimonial = testimonials[index];
+    const text = `"${testimonial.quote}" - ${testimonial.name}\n\nPrepare for NPF screening here: ${window.location.href}`;
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    
+    window.open(waUrl, '_blank');
+    
+    logEvent('click', { action: 'testimonial_share_whatsapp', index });
+    
+    // TikTok Tracking
+    if ((window as any).ttq) {
+      (window as any).ttq.track('Share', {
+        content_name: 'WhatsApp Share',
+        content_id: index.toString()
+      });
     }
   };
 
@@ -437,6 +456,13 @@ export default function App() {
                   </div>
                   
                   <div className="ml-auto flex gap-2">
+                    <button 
+                      onClick={() => handleWhatsAppShare(testimonialIndex)}
+                      className="p-3 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-green-500"
+                      title="Share on WhatsApp"
+                    >
+                      <MessageCircle size={20} fill="currentColor" />
+                    </button>
                     <button 
                       onClick={() => handleFacebookShare(testimonialIndex)}
                       className="p-3 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-blue-500"
