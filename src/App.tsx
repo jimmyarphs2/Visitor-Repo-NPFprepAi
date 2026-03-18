@@ -91,7 +91,10 @@ export default function App() {
     
     // TikTok ViewContent
     if (typeof (window as any).ttq !== 'undefined') {
-      (window as any).ttq.track('ViewContent');
+      (window as any).ttq.track('ViewContent', {
+        content_name: 'NPFprepAi Landing Page',
+        content_type: 'landing_page'
+      });
     }
 
     // Dynamic Counter
@@ -112,7 +115,10 @@ export default function App() {
       
       // TikTok Tracking
       if (typeof (window as any).ttq !== 'undefined') {
-        (window as any).ttq.track('ClickButton');
+        (window as any).ttq.track('ClickButton', {
+          content_name: 'CTA Click - Start Preparing',
+          destination: 'npfprepai.online'
+        });
         (window as any).ttq.track('CompleteRegistration', {
           content_name: 'Start Free Practice',
           content_category: 'Button Click'
