@@ -15,7 +15,9 @@ import {
   CheckCircle2, 
   ArrowRight, 
   Download,
-  X
+  X,
+  Share2,
+  Facebook
 } from 'lucide-react';
 import { auth, signInWithGoogle, logEvent } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -100,9 +102,17 @@ export default function App() {
 
   const handleAuth = async () => {
     try {
-      logEvent('click', { button: 'start_preparing_now' });
-      await signInWithGoogle();
-      logEvent('signup', { method: 'google' });
+      await logEvent('click', { button: 'start_preparing_now', target: 'https://npfprepai.online' });
+      
+      // TikTok Tracking
+      if ((window as any).ttq) {
+        (window as any).ttq.track('CompleteRegistration', {
+          content_name: 'Start Free Practice',
+          content_category: 'Button Click'
+        });
+      }
+
+      window.open('https://npfprepai.online', '_blank');
     } catch (error) {
       console.error(error);
     }
@@ -111,7 +121,66 @@ export default function App() {
   const handleWhatsApp = () => {
     logEvent('click', { button: 'join_whatsapp' });
     logEvent('whatsapp_join');
+
+    // TikTok Tracking
+    if ((window as any).ttq) {
+      (window as any).ttq.track('Contact', {
+        content_name: 'Join WhatsApp Community',
+        content_category: 'Button Click'
+      });
+    }
+
     window.open('https://whatsapp.com/channel/0029VbBfoGRAu3aYVwMtnc2L', '_blank');
+  };
+
+  const handleShare = async (index: number) => {
+    const testimonial = testimonials[index];
+    const shareData = {
+      title: 'NPF Prep Success Story',
+      text: `"${testimonial.quote}" - ${testimonial.name} is preparing for the NPF screening with NPF Prep. Join us!`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        logEvent('click', { action: 'testimonial_share_native', index });
+      } else {
+        // Fallback: Copy to clipboard
+        await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+        alert('Testimonial copied to clipboard!');
+        logEvent('click', { action: 'testimonial_share_clipboard', index });
+      }
+
+      // TikTok Tracking
+      if ((window as any).ttq) {
+        (window as any).ttq.track('Share', {
+          content_name: 'Testimonial Share',
+          content_id: index.toString()
+        });
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
+
+  const handleFacebookShare = (index: number) => {
+    const testimonial = testimonials[index];
+    const text = `"${testimonial.quote}" - ${testimonial.name}`;
+    const url = window.location.href;
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
+    
+    window.open(fbUrl, '_blank', 'width=600,height=400');
+    
+    logEvent('click', { action: 'testimonial_share_facebook', index });
+    
+    // TikTok Tracking
+    if ((window as any).ttq) {
+      (window as any).ttq.track('Share', {
+        content_name: 'Facebook Share',
+        content_id: index.toString()
+      });
+    }
   };
 
   const installPwa = async () => {
@@ -182,7 +251,7 @@ export default function App() {
           onClick={handleAuth}
           className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 active:scale-95 transition-transform"
         >
-          {user ? 'Go to Dashboard' : 'Start Preparing Now'} <Zap size={20} fill="currentColor" />
+          Start Preparing Now <Zap size={20} fill="currentColor" />
         </button>
       </motion.div>
 
@@ -331,8 +400,14 @@ export default function App() {
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 onDragEnd={(_, info) => {
-                  if (info.offset.x > 50) setTestimonialIndex(prev => (prev - 1 + testimonials.length) % testimonials.length);
-                  if (info.offset.x < -50) setTestimonialIndex(prev => (prev + 1) % testimonials.length);
+                  if (info.offset.x > 50) {
+                    setTestimonialIndex(prev => (prev - 1 + testimonials.length) % testimonials.length);
+                    logEvent('click', { action: 'testimonial_swipe', direction: 'prev' });
+                  }
+                  if (info.offset.x < -50) {
+                    setTestimonialIndex(prev => (prev + 1) % testimonials.length);
+                    logEvent('click', { action: 'testimonial_swipe', direction: 'next' });
+                  }
                 }}
                 className="absolute w-full bg-neutral-800/50 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/10 shadow-[0_0_50px_-12px_rgba(16,185,129,0.3)] cursor-grab active:cursor-grabbing"
               >
@@ -360,6 +435,23 @@ export default function App() {
                     <p className="font-black text-lg tracking-tight">{testimonials[testimonialIndex].name}</p>
                     <p className="text-xs text-emerald-500 font-bold uppercase tracking-widest">Verified Candidate</p>
                   </div>
+                  
+                  <div className="ml-auto flex gap-2">
+                    <button 
+                      onClick={() => handleFacebookShare(testimonialIndex)}
+                      className="p-3 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-blue-500"
+                      title="Share on Facebook"
+                    >
+                      <Facebook size={20} fill="currentColor" />
+                    </button>
+                    <button 
+                      onClick={() => handleShare(testimonialIndex)}
+                      className="p-3 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-emerald-500"
+                      title="Share this testimonial"
+                    >
+                      <Share2 size={20} />
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             </AnimatePresence>
@@ -370,7 +462,10 @@ export default function App() {
             {testimonials.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setTestimonialIndex(i)}
+                onClick={() => {
+                  setTestimonialIndex(i);
+                  logEvent('click', { action: 'testimonial_indicator', index: i });
+                }}
                 className={`h-1 transition-all duration-300 rounded-full ${i === testimonialIndex ? 'w-8 bg-emerald-500' : 'w-2 bg-white/20'}`}
               />
             ))}
